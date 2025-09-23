@@ -1,0 +1,4 @@
+# Ignorar node_modules y archivos sensibles
+node_modules
+.env
+build

@@ -1,0 +1,56 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Agregar en un archivo CSS o en styled-components */
+.btn-eliminar {
+    background-color: #ff4444;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-left: 10px;
+}
+
+.btn-eliminar:hover {
+    background-color: #cc0000;
+}
+
+.btn-terminado {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.btn-terminado:hover {
+    background-color: #45a049;
+}
+
+/* frontend/src/index.css */
+.estado-terminado {
+    color: green;
+    font-weight: bold;
+}
+
+.estado-pendiente {
+    color: orange;
+    font-weight: bold;
+}
+
+/* frontend/src/index.css */
+.form-container {
+    transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+}
+
+.form-container.show {
+    max-height: 500px;
+    /* Ajusta según el tamaño del formulario */
+    opacity: 1;
+}
