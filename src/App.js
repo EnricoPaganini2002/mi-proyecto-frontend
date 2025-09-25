@@ -796,7 +796,13 @@ function App() {
     useEffect(() => {
         fetch(`${API_URL}/personas`)
             .then((response) => {
-                if (!response.ok) throw new Error("Error al cargar personas");
+                if (!response.ok) {
+                    // Intenta leer el cuerpo del error como texto para depurar
+                    return response.text().then(text => {
+                        console.error("Server response (not ok):", text);
+                        throw new Error(`Error al cargar personas. Status: ${response.status}`);
+                    });
+                }
                 return response.json();
             })
             .then((data) => setPersonas(data))
@@ -804,71 +810,71 @@ function App() {
                 setError(error.message);
                 console.error("Error cargando personas:", error);
             });
-    }, []);
+    }, [API_URL]);
 
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+        setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setError(null);
-        fetch(`${API_URL}/personas`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(formData),
-        })
-            .then((response) => {
-                if (!response.ok) {
-                    return response.json().then((err) => {
-                        throw new Error(err.error || "Error al agregar persona");
-                    });
-                }
-                return response.json();
-            })
-            .then((newPersona) => {
-                setPersonas([...personas, newPersona]);
-                setFormData({ dni: "", nombre: "", apellido: "", mutual: "", atencion: "" });
-                setShowForm(false); // Ocultar formulario tras agregar
-            })
-            .catch((error) => {
-                setError(error.message);
-                console.error("Error agregando persona:", error);
+        try {
+            const response = await fetch(`${API_URL}/personas`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(formData),
             });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || "Error al agregar persona");
+            }
+
+            setPersonas((prev) => [...prev, result]);
+            setFormData({ dni: "", nombre: "", apellido: "", mutual: "", atencion: "" });
+            setShowForm(false); // Ocultar formulario tras agregar
+        } catch (error) {
+            setError(error.message);
+            console.error("Error agregando persona:", error);
+        }
     };
 
-    const handleTerminado = (id) => {
+    const handleTerminado = async (id) => {
         setError(null);
-        fetch(`${API_URL}/personas/${id}/terminar`, { method: "PUT" })
-            .then((response) => {
-                if (!response.ok) throw new Error("Error al marcar como terminado");
-                return response.json();
-            })
-            .then(() => {
-                setPersonas(
-                    personas.map((persona) =>
-                        persona.id === id ? { ...persona, terminado: 1 } : persona
-                    )
-                );
-            })
-            .catch((error) => {
-                setError(error.message);
-                console.error("Error marcando como terminado:", error);
-            });
+        try {
+            const response = await fetch(`${API_URL}/personas/${id}/terminar`, { method: "PUT" });
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.error || "Error al marcar como terminado");
+            }
+            setPersonas((prev) =>
+                prev.map((persona) =>
+                    persona.id === id ? { ...persona, terminado: 1 } : persona
+                )
+            );
+        } catch (error) {
+            setError(error.message);
+            console.error("Error marcando como terminado:", error);
+        }
     };
 
-    const handleEliminar = (id) => {
+    const handleEliminar = async (id) => {
         if (window.confirm("¿Estás seguro de que quieres eliminar esta persona?")) {
             setError(null);
-            fetch(`${API_URL}/personas/${id}`, { method: "DELETE" })
-                .then((response) => {
-                    if (!response.ok) throw new Error("Error al eliminar persona");
-                    setPersonas(personas.filter((persona) => persona.id !== id));
-                })
-                .catch((error) => {
-                    setError(error.message);
-                    console.error("Error eliminando persona:", error);
-                });
+            try {
+                const response = await fetch(`${API_URL}/personas/${id}`, { method: "DELETE" });
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.error || "Error al eliminar persona");
+                }
+                setPersonas((prev) => prev.filter((persona) => persona.id !== id));
+            } catch (error) {
+                setError(error.message);
+                console.error("Error eliminando persona:", error);
+            }
         }
     };
 
@@ -883,7 +889,7 @@ function App() {
                 {showForm ? "Ocultar Formulario" : "Mostrar Formulario"}
             </Button>
 
-            {error && <div className="text-red-500 mb-4">{error}</div>}
+            {error && <div className="text-red-500 mb-4">Error: {error}</div>}
 
             {showForm && (
                 <form onSubmit={handleSubmit} className="mb-5">
