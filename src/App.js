@@ -793,11 +793,29 @@ function App() {
 
     const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
+    // useEffect(() => {
+    //     fetch(`${API_URL}/personas`)
+    //         .then((response) => {
+    //             if (!response.ok) {
+    //                 // Intenta leer el cuerpo del error como texto para depurar
+    //                 return response.text().then(text => {
+    //                     console.error("Server response (not ok):", text);
+    //                     throw new Error(`Error al cargar personas. Status: ${response.status}`);
+    //                 });
+    //             }
+    //             return response.json();
+    //         })
+    //         .then((data) => setPersonas(data))
+    //         .catch((error) => {
+    //             setError(error.message);
+    //             console.error("Error cargando personas:", error);
+    //         });
+    // }, [API_URL]);
+
     useEffect(() => {
         fetch(`${API_URL}/personas`)
             .then((response) => {
                 if (!response.ok) {
-                    // Intenta leer el cuerpo del error como texto para depurar
                     return response.text().then(text => {
                         console.error("Server response (not ok):", text);
                         throw new Error(`Error al cargar personas. Status: ${response.status}`);
@@ -817,6 +835,30 @@ function App() {
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
+    // const handleSubmit = async (e) => {
+    //     e.preventDefault();
+    //     setError(null);
+    //     try {
+    //         const response = await fetch(`${API_URL}/personas`, {
+    //             method: "POST",
+    //             headers: { "Content-Type": "application/json" },
+    //             body: JSON.stringify(formData),
+    //         });
+
+    //         const result = await response.json();
+
+    //         if (!response.ok) {
+    //             throw new Error(result.error || "Error al agregar persona");
+    //         }
+
+    //         setPersonas((prev) => [...prev, result]);
+    //         setFormData({ dni: "", nombre: "", apellido: "", mutual: "", atencion: "" });
+    //         setShowForm(false); // Ocultar formulario tras agregar
+    //     } catch (error) {
+    //         setError(error.message);
+    //         console.error("Error agregando persona:", error);
+    //     }
+    // };
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError(null);
@@ -826,22 +868,18 @@ function App() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(formData),
             });
-
-            const result = await response.json();
-
+            const result = response.status !== 204 ? await response.json() : {};
             if (!response.ok) {
                 throw new Error(result.error || "Error al agregar persona");
             }
-
             setPersonas((prev) => [...prev, result]);
             setFormData({ dni: "", nombre: "", apellido: "", mutual: "", atencion: "" });
-            setShowForm(false); // Ocultar formulario tras agregar
+            setShowForm(false);
         } catch (error) {
             setError(error.message);
             console.error("Error agregando persona:", error);
         }
     };
-
     const handleTerminado = async (id) => {
         setError(null);
         try {
